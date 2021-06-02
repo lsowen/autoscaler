@@ -82,6 +82,13 @@ func GetNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 		if !kube_util.IsNodeReadyAndSchedulable(node) {
 			continue
 		}
+
+		_, lastTransitionTime, _ := kube_util.GetReadinessState(node)
+		if lastTransitionTime.Add(time.Minute * 5).After(time.Now()) {
+			// Hasn't "settled" for 5 minutes
+			continue
+		}
+
 		added, id, typedErr := processNode(node)
 		if typedErr != nil {
 			return map[string]*schedulerframework.NodeInfo{}, typedErr
